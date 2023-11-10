@@ -110,11 +110,11 @@ def get_review_usernames(read_text_file, os) -> list:
 
 def username_search_bar() -> None:
     campus_general_link = '//*[@id="C0182HEG02C"]'
-    
+
     # slack_users = 'html body.p-ia4_body.gecko.use-slack-font div.p-client_container div.p-ia4_client_container div.p-ia4_client.p-ia4_client--with-search-in-top-nav.p-ia4_client--workspace-switcher-prototype-on.p-ia4_client--browser.p-ia4_client--theming div.p-client_workspace--including_tab_rail div.p-client_workspace div.p-client_workspace__layout div.active-managed-focus-container div div.p-view_contents.p-view_contents--primary.p-view_contents--channel-list-pry div div.p-view_header.p-view_header--tiles.p-view_header--with-bookmarks-bar div.p-view_header__actions div.p-autoclog__hook button.c-button-unstyled.p-avatar_stack--details'
-    
+
     slack_users_xpath = "/html/body/div[2]/div/div/div[4]/div[2]/div[1]/div[3]/div[2]/div/div/div[1]/div[2]/div[1]/button"
-    
+
     # slack_users_class = "stack--details"
 
     try:
@@ -158,15 +158,15 @@ def search_username(name) -> None:
 
     users_in_channel_list = 'p-ia_details_popover__members_list_item_member'
     users_not_in_channel_list = 'p-ia_details_popover__members_list_item_member--non-channel'
-    enter_user_btn = 'html body.p-ia4_body.gecko.use-slack-font.underline-all-links.ReactModal__Body--open div.c-sk-modal_portal div.ReactModal__Overlay.ReactModal__Overlay--after-open.c-sk-overlay div.ReactModal__Content.ReactModal__Content--after-open.c-sk-modal.c-sk-modal--fixed.c-sk-modal--responsive.p-about_modal div.p-about_modal__tabs div.p-about_modal__tab_panel.c-tabs__tab_panel.c-tabs__tab_panel--active div.p-ia_details_popover__members.p-ia_details_popover__members--non-channel-results.p-ia_details_popover__members--in-channel-empty div.p-ia_details_popover__members_list div div div.c-virtual_list.c-virtual_list--scrollbar.c-scrollbar.c-scrollbar--hidden div.c-scrollbar__hider div.c-scrollbar__child div.c-virtual_list__scroll_container div#U05S19T5D9T.p-ia_details_popover__members_list_item.p-ia_details_popover__members_list_item_member.p-ia_details_popover__members_list_item_member--non-channel.c-virtual_list__item button.c-button-unstyled'
 
     try:
         names_ele = WebDriverWait(browser, 2).until(
             EC.presence_of_element_located((By.CLASS_NAME, users_not_in_channel_list)))
 
+        enter_user_btn = '/html/body/div[11]/div/div/div[2]/div[2]/div/div[2]/div[1]/div/div/div[1]/div/div/div[6]/button[1]'
         try:
             enter_user_details_btn = WebDriverWait(browser, wait_period).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, enter_user_btn)))
+                EC.presence_of_element_located((By.XPATH, enter_user_btn)))
             enter_user_details_btn.click()
         except:
             pass
@@ -181,7 +181,6 @@ def search_username(name) -> None:
                 enter_into_user = WebDriverWait(browser, wait_period).until(
                     EC.presence_of_element_located((By.XPATH, enter_user_btn)))
                 enter_into_user.click()
-                # browser.find_element(By.XPATH, enter_user_btn).click()
 
             except:
                 print("Username not found, Please enter a valid username.")
@@ -229,47 +228,55 @@ def get_user_name() -> str:
         exit()
 
 
-def message_user(names) -> None:
+def message_user(names, os) -> None:
     print(f"Now sending messages to {len(names)} person(s)")
     for user_data in tqdm(names):
-        for name, data in user_data.items():
-            username_search_bar()
-            search_username(name)
-            user_name = go_to_message_user()
 
-            module = data[0]
-            topic = data[1]
-            problem = data[2]
-            uuid = data[3]
-            arr_message = [f"Hi {user_name.title()}, I am reviewing your project.", " ",
-                           "Project Details:", module, topic, problem, uuid, " ", "When are you available for a Google meets so we can discuss your project further?", "Thank you."]
+        try:
+            for name, data in user_data.items():
+                username_search_bar()
+                search_username(name)
+                user_name = go_to_message_user()
 
-            sleep(1)
-            type_message = ActionChains(browser)
+                module = data[0]
+                topic = data[1]
+                problem = data[2]
+                uuid = data[3]
+                arr_message = [f"Hi {user_name.title()}, I am reviewing your project.", " ",
+                               "Project Details:", module, topic, problem, uuid, " ", "When are you available for a Google meets so we can discuss your project further?", "Thank you."]
 
-            for line in arr_message:
-                type_message.send_keys(line)
-                type_message.key_down(Keys.SHIFT).send_keys(
-                    Keys.RETURN).key_up(Keys.SHIFT)
-                type_message.perform()
+                sleep(1)
+                type_message = ActionChains(browser)
 
-            send_message_btn_xpath = '/html/body/div[2]/div/div/div[4]/div[2]/div[1]/div[3]/div[2]/div/div/div[3]/div[2]/div/div/div[2]/div/div/div/div[3]/div[3]/span/button[1]'
+                for line in arr_message:
+                    type_message.send_keys(line)
+                    type_message.key_down(Keys.SHIFT).send_keys(
+                        Keys.RETURN).key_up(Keys.SHIFT)
+                    type_message.perform()
 
-            send_message_btn_class = 'c-wysiwyg_container__button--send'
+                send_message_btn_xpath = '/html/body/div[2]/div/div/div[4]/div[2]/div[1]/div[3]/div[2]/div/div/div[3]/div[2]/div/div/div[2]/div/div/div/div[3]/div[3]/span/button[1]'
 
-            try:
-                send_message = WebDriverWait(browser, wait_period).until(
-                    EC.presence_of_element_located(
-                        (By.CLASS_NAME, send_message_btn_class))
-                )
-                send_message.click()
-            except:
-                send_message = WebDriverWait(browser, wait_period).until(
-                    EC.presence_of_element_located(
-                        (By.XPATH, send_message_btn_xpath))
-                )
-                send_message.click()
+                send_message_btn_class = 'c-wysiwyg_container__button--send'
+
+                try:
+                    send_message = WebDriverWait(browser, wait_period).until(
+                        EC.presence_of_element_located(
+                            (By.CLASS_NAME, send_message_btn_class))
+                    )
+                    send_message.click()
+                except:
+                    send_message = WebDriverWait(browser, wait_period).until(
+                        EC.presence_of_element_located(
+                            (By.XPATH, send_message_btn_xpath))
+                    )
+                    send_message.click()
+                delete_tmp_file(os, uuid)
+                sleep(3)
+        except:
+            user = str(user_data.keys())
+            print("Skipping", user.split('\'')[1])
             sleep(3)
+            continue
 
 
 def sending_message():
@@ -277,6 +284,17 @@ def sending_message():
     print_term_lines()
     print("Now Sending message(s) via Slack")
     print_term_lines()
+
+
+def delete_tmp_file(os, uuid):
+    try:
+        file_path = os.path.join(
+            tmp_file_path, f'.sample-{uuid.split()[1]}.txt')
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+    except FileNotFoundError:
+        print("File was not found")
+        pass
 
 
 def delete_tmp_files(os):
@@ -295,7 +313,7 @@ def run_script(os) -> None:
         open_slack_link()
         names = get_review_usernames(read_text_file, os)
 
-        message_user(names)
+        message_user(names, os)
 
         print("\nAll messages have been sent.")
 

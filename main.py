@@ -5,6 +5,7 @@ import lpt_lms
 
 config_path = f'{path}/.config/lpt/config.yml'
 
+
 def run_lms_script() -> None:
     """Check if the config file exists in the directory, if it doesn't, go through the configuration process then run the slack script.
     """
@@ -37,7 +38,7 @@ if __name__ == "__main__":
         print()
         run_lms_script()
         lpt_lms.messenger(message)
-        delete_tmp_files(os)
+        # delete_tmp_files(os)
         exit()
     except KeyboardInterrupt:
         print()
