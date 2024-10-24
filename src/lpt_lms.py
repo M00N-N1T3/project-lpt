@@ -4,7 +4,6 @@ from time import sleep
 from sys import exit
 
 
-
 def print_term_lines():
     column, lines = os.get_terminal_size()
     print("-" * column)
@@ -18,7 +17,7 @@ def login_lms():
 
         try:
             out = subprocess.run(f"wtc-lms login", shell=True,
-                                stdout=subprocess.PIPE, text=True)
+                                 stdout=subprocess.PIPE, text=True)
         except KeyboardInterrupt:
             exit()
 
@@ -38,12 +37,11 @@ def login_lms():
 
 
 def get_UUID():
-    print("Please enter the UUID(s) you would like to review seperated by spaces (spicey-chick-set spare-ton-fix)")
+    print("Please enter the UUID(s) you would like to review separated by spaces (spicey-chick-set spare-ton-fix)")
     user_input = input("\n\nEnter the UUID(S): ").lower(
     ).strip().strip("(").strip(")")
 
-    # if "(" in user_input or ")" in user_input:
-    #     user_input = user_input.strip("(").strip()
+
     ls_of_sel_UUID = user_input.split(" ")
     subprocess.run(f'echo', shell=True)
 
@@ -74,11 +72,15 @@ def accept_reviews(student_UUIDS: list):
         if ("fatal: You must specify a repository to clone.") in var.stderr:
             var = subprocess.run(
                 f'git clone $(cat "{uuid}.txt" | grep -w "Git Url:" | cut -f3 -d " ")', shell=True, capture_output=True, text=True)
+            sleep(5)
+            continue
 
         if "Failed" in var.stderr or "failed" in var.stderr:
             print(var.stderr.strip())
             failed.append(uuid)
             os.remove(f'{uuid}.txt')
+            sleep(5)
+            continue
         else:
             print(var.stderr)
             successful.append(uuid)
@@ -108,7 +110,11 @@ def parameter_generation(student_UUID: list):
 
     UUID_sample = []
     for uuid in student_UUID:
-        UUID_sample.append((f"sample-{uuid}"))
+        if ".sample-" in uuid:
+            continue
+        else:
+            UUID_sample.append((f"sample-{uuid}"))
+
     uuid_index = 0
     for uuid in UUID_sample:
 
@@ -124,10 +130,29 @@ def parameter_generation(student_UUID: list):
             ID = subprocess.run(
                 f'(cat "{student_UUID[uuid_index]}.txt" | grep -w "add_comment" | cut -f3 -d " ")', shell=True, stdout=subprocess.PIPE, text=True)
             f.write(f"UUID: {ID.stdout}")
+
+            # Renaming the folder with student name
+            name = subprocess.run(
+                f'(cat "{student_UUID[uuid_index]}.txt" | grep -w "Submission" | cut -f3 -d " ")', shell=True, capture_output=True, text=True)
+            file_name = subprocess.run(
+                f'(cat "{student_UUID[uuid_index]}.txt" | grep -w "Git Url:" | cut -f2 -d "/")', shell=True, capture_output=True, text=True)
+
+            folder_name = file_name.stdout
+            new_name = folder_name.replace(".git", "").strip()
+            rename = name.stdout
+            rename = rename.strip("@student.wethinkcode.co.za\n")
+
+            sleep(1)
+            subprocess.run(f'mv {new_name} {rename}',
+                           shell=True, capture_output=True, text=True)
+            sleep(1)
+            subprocess.run(f'mv {student_UUID[uuid_index]} {rename}',
+                           shell=True, capture_output=True, text=True)
+
         uuid_index += 1
 
     message = reminder(UUID_sample)
-    subprocess.run(f"mv .s* /tmp/lpt", shell=True, capture_output=True)
+    subprocess.run(f"mv .sample* /tmp/lpt", shell=True, capture_output=True)
 
     return message
 
@@ -182,14 +207,22 @@ def run():
 
 def return_message():
 
-    file_in_dir = os.listdir(os.getcwd())
-    files = [file for file in file_in_dir
-             if ".txt" in file]
+    # subprocess.run(f"cd /tmp/lpt",shell=True)
+    os.chdir("/tmp/lpt")
 
-    UUID_list = []
-    for file in files:
-        txt_file_name = file.split(".")[0]
-        UUID_list.append(txt_file_name)
-    message = parameter_generation(UUID_list)
+    try:
+
+        file_in_dir = os.listdir(os.getcwd())
+
+        files = [file for file in file_in_dir
+                 if ".txt" in file]
+
+        UUID_list = []
+        for file in files:
+            txt_file_name = file.replace(".txt", "").replace(".s","s")
+            UUID_list.append(txt_file_name)
+        message = reminder(UUID_list)
+    except FileNotFoundError:
+        print("Your message box is clean.")
 
     return message
